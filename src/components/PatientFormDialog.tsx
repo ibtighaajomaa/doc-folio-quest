@@ -25,12 +25,31 @@ const FieldHelp = ({ text }: { text: string }) => (
   </Tooltip>
 );
 
-const PatientFormDialog = ({ open, onOpenChange, onSubmit }: Props) => {
-  const [form, setForm] = useState({
+const PatientFormDialog = ({ open, onOpenChange, onSubmit, editingPatient }: Props) => {
+  const emptyForm = {
     nom: '', prenom: '', dateNaissance: '', sexe: '' as 'M' | 'F',
     telephone: '', email: '', adresse: '', ville: '', codePostal: '',
     groupeSanguin: '', allergies: '', antecedents: '',
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
+
+  React.useEffect(() => {
+    if (editingPatient) {
+      setForm({
+        nom: editingPatient.nom, prenom: editingPatient.prenom,
+        dateNaissance: editingPatient.dateNaissance, sexe: editingPatient.sexe,
+        telephone: editingPatient.telephone, email: editingPatient.email,
+        adresse: editingPatient.adresse, ville: editingPatient.ville,
+        codePostal: editingPatient.codePostal,
+        groupeSanguin: editingPatient.groupeSanguin || '',
+        allergies: editingPatient.allergies || '',
+        antecedents: editingPatient.antecedents || '',
+      });
+    } else {
+      setForm(emptyForm);
+    }
+  }, [editingPatient, open]);
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -38,11 +57,11 @@ const PatientFormDialog = ({ open, onOpenChange, onSubmit }: Props) => {
     e.preventDefault();
     const patient: Patient = {
       ...form,
-      id: `P${String(Date.now()).slice(-4)}`,
-      createdAt: new Date().toISOString().split('T')[0],
+      id: editingPatient?.id || `P${String(Date.now()).slice(-4)}`,
+      createdAt: editingPatient?.createdAt || new Date().toISOString().split('T')[0],
     };
     onSubmit(patient);
-    setForm({ nom: '', prenom: '', dateNaissance: '', sexe: '' as 'M' | 'F', telephone: '', email: '', adresse: '', ville: '', codePostal: '', groupeSanguin: '', allergies: '', antecedents: '' });
+    setForm(emptyForm);
   };
 
   return (
