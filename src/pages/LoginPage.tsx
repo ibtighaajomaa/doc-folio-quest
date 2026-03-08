@@ -62,7 +62,11 @@ const LoginPage = () => {
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
-          <div className="mt-6 p-3 rounded-lg bg-accent text-accent-foreground text-xs space-y-1">
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Pas encore de compte ?{' '}
+            <Link to="/register" className="text-primary hover:underline font-medium">S'inscrire</Link>
+          </p>
+          <div className="mt-4 p-3 rounded-lg bg-accent text-accent-foreground text-xs space-y-1">
             <p className="font-semibold">Comptes démo :</p>
             <p>Médecin : dr.martin@clinique.fr</p>
             <p>Admin : admin@clinique.fr</p>
