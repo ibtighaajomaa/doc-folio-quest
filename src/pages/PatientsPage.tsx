@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { mockPatients } from '@/lib/mock-data';
 import { Patient } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, User, Phone, Mail } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, Pencil } from 'lucide-react';
 import PatientFormDialog from '@/components/PatientFormDialog';
 import PatientDetailDialog from '@/components/PatientDetailDialog';
 
@@ -13,15 +13,27 @@ const PatientsPage = () => {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   const filtered = patients.filter(p =>
     `${p.nom} ${p.prenom} ${p.id}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddPatient = (patient: Patient) => {
-    setPatients(prev => [...prev, patient]);
+  const handleSavePatient = (patient: Patient) => {
+    if (editingPatient) {
+      setPatients(prev => prev.map(p => p.id === patient.id ? patient : p));
+    } else {
+      setPatients(prev => [...prev, patient]);
+    }
     setShowForm(false);
+    setEditingPatient(null);
+  };
+
+  const handleEdit = (e: React.MouseEvent, patient: Patient) => {
+    e.stopPropagation();
+    setEditingPatient(patient);
+    setShowForm(true);
   };
 
   return (
@@ -31,7 +43,7 @@ const PatientsPage = () => {
           <h1 className="text-2xl font-heading font-bold">Patients</h1>
           <p className="text-muted-foreground text-sm">{patients.length} patients enregistrés</p>
         </div>
-        <Button className="medical-gradient border-0 text-primary-foreground" onClick={() => setShowForm(true)}>
+        <Button className="medical-gradient border-0 text-primary-foreground" onClick={() => { setEditingPatient(null); setShowForm(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Nouveau patient
         </Button>
       </div>
@@ -53,6 +65,9 @@ const PatientsPage = () => {
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm truncate">{patient.prenom} {patient.nom}</p>
                     <Badge variant="outline" className="text-xs shrink-0">{patient.id}</Badge>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleEdit(e, patient)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {patient.sexe === 'M' ? 'Homme' : 'Femme'} · Né(e) le {patient.dateNaissance}
@@ -71,7 +86,7 @@ const PatientsPage = () => {
         ))}
       </div>
 
-      <PatientFormDialog open={showForm} onOpenChange={setShowForm} onSubmit={handleAddPatient} />
+      <PatientFormDialog open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setEditingPatient(null); }} onSubmit={handleSavePatient} editingPatient={editingPatient} />
       <PatientDetailDialog patient={selectedPatient} onClose={() => setSelectedPatient(null)} />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Patient } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (patient: Patient) => void;
+  editingPatient?: Patient | null;
 }
 
 const FieldHelp = ({ text }: { text: string }) => (
@@ -24,12 +25,31 @@ const FieldHelp = ({ text }: { text: string }) => (
   </Tooltip>
 );
 
-const PatientFormDialog = ({ open, onOpenChange, onSubmit }: Props) => {
-  const [form, setForm] = useState({
+const PatientFormDialog = ({ open, onOpenChange, onSubmit, editingPatient }: Props) => {
+  const emptyForm = {
     nom: '', prenom: '', dateNaissance: '', sexe: '' as 'M' | 'F',
     telephone: '', email: '', adresse: '', ville: '', codePostal: '',
     groupeSanguin: '', allergies: '', antecedents: '',
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
+
+  React.useEffect(() => {
+    if (editingPatient) {
+      setForm({
+        nom: editingPatient.nom, prenom: editingPatient.prenom,
+        dateNaissance: editingPatient.dateNaissance, sexe: editingPatient.sexe,
+        telephone: editingPatient.telephone, email: editingPatient.email,
+        adresse: editingPatient.adresse, ville: editingPatient.ville,
+        codePostal: editingPatient.codePostal,
+        groupeSanguin: editingPatient.groupeSanguin || '',
+        allergies: editingPatient.allergies || '',
+        antecedents: editingPatient.antecedents || '',
+      });
+    } else {
+      setForm(emptyForm);
+    }
+  }, [editingPatient, open]);
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -37,11 +57,11 @@ const PatientFormDialog = ({ open, onOpenChange, onSubmit }: Props) => {
     e.preventDefault();
     const patient: Patient = {
       ...form,
-      id: `P${String(Date.now()).slice(-4)}`,
-      createdAt: new Date().toISOString().split('T')[0],
+      id: editingPatient?.id || `P${String(Date.now()).slice(-4)}`,
+      createdAt: editingPatient?.createdAt || new Date().toISOString().split('T')[0],
     };
     onSubmit(patient);
-    setForm({ nom: '', prenom: '', dateNaissance: '', sexe: '' as 'M' | 'F', telephone: '', email: '', adresse: '', ville: '', codePostal: '', groupeSanguin: '', allergies: '', antecedents: '' });
+    setForm(emptyForm);
   };
 
   return (
@@ -50,7 +70,7 @@ const PatientFormDialog = ({ open, onOpenChange, onSubmit }: Props) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading">
             <UserPlus className="h-5 w-5 text-primary" />
-            Enregistrer un nouveau patient
+            {editingPatient ? 'Modifier le patient' : 'Enregistrer un nouveau patient'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -139,7 +159,7 @@ const PatientFormDialog = ({ open, onOpenChange, onSubmit }: Props) => {
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
             <Button type="submit" className="medical-gradient border-0 text-primary-foreground">
-              <UserPlus className="mr-2 h-4 w-4" /> Enregistrer
+              <UserPlus className="mr-2 h-4 w-4" /> {editingPatient ? 'Modifier' : 'Enregistrer'}
             </Button>
           </div>
         </form>
