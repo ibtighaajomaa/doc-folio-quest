@@ -70,7 +70,7 @@ const PatientFormDialog = ({ open, onOpenChange, onSubmit, editingPatient }: Pro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading">
             <UserPlus className="h-5 w-5 text-primary" />
-            Enregistrer un nouveau patient
+            {editingPatient ? 'Modifier le patient' : 'Enregistrer un nouveau patient'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
