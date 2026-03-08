@@ -159,7 +159,7 @@ const PatientFormDialog = ({ open, onOpenChange, onSubmit, editingPatient }: Pro
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
             <Button type="submit" className="medical-gradient border-0 text-primary-foreground">
-              <UserPlus className="mr-2 h-4 w-4" /> Enregistrer
+              <UserPlus className="mr-2 h-4 w-4" /> {editingPatient ? 'Modifier' : 'Enregistrer'}
             </Button>
           </div>
         </form>
