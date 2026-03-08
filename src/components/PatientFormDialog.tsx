@@ -13,6 +13,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (patient: Patient) => void;
+  editingPatient?: Patient | null;
 }
 
 const FieldHelp = ({ text }: { text: string }) => (
