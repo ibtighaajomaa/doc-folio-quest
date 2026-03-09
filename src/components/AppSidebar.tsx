@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
-  LayoutDashboard, Users, Stethoscope, CalendarDays, FileText, LogOut, Heart, UserCog,
+  LayoutDashboard, Users, Stethoscope, CalendarDays, FileText, LogOut, Heart, UserCog, UserCircle,
 } from 'lucide-react';
 
 const medecinItems = [
@@ -16,6 +16,7 @@ const medecinItems = [
   { title: 'Consultations', url: '/consultations', icon: Stethoscope },
   { title: 'Rendez-vous', url: '/rendez-vous', icon: CalendarDays },
   { title: 'Documents', url: '/documents', icon: FileText },
+  { title: 'Mon profil', url: '/profil', icon: UserCircle },
 ];
 
 const adminItems = [
