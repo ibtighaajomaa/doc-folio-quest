@@ -6,6 +6,12 @@ export interface User {
   nom: string;
   prenom: string;
   role: UserRole;
+  telephone?: string;
+  specialite?: string;
+  numeroOrdre?: string;
+  adresse?: string;
+  ville?: string;
+  codePostal?: string;
 }
 
 export interface Patient {

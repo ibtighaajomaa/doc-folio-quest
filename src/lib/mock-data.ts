@@ -1,8 +1,8 @@
 import { Patient, Consultation, RendezVous, User } from './types';
 
 export const mockUsers: User[] = [
-  { id: '1', email: 'dr.martin@clinique.fr', nom: 'Martin', prenom: 'Jean', role: 'medecin' },
-  { id: '2', email: 'admin@clinique.fr', nom: 'Dupont', prenom: 'Marie', role: 'admin_staff' },
+  { id: '1', email: 'dr.martin@clinique.fr', nom: 'Martin', prenom: 'Jean', role: 'medecin', telephone: '06 55 44 33 22', specialite: 'Médecine générale', numeroOrdre: '75-12345', adresse: '10 Rue Pasteur', ville: 'Paris', codePostal: '75006' },
+  { id: '2', email: 'admin@clinique.fr', nom: 'Dupont', prenom: 'Marie', role: 'admin_staff', telephone: '06 11 22 33 44' },
 ];
 
 export const mockPatients: Patient[] = [

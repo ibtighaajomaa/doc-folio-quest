@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(() => setUser(null), []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
