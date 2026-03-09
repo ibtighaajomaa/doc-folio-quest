@@ -7,6 +7,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: { email: string; password: string; nom: string; prenom: string; specialite?: string }) => Promise<{ success: boolean; error?: string }>;
+  updateUser: (data: Partial<User>) => void;
   logout: () => void;
 }
 
