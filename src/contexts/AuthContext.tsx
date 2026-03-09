@@ -28,10 +28,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async (email: string, password: string) => {
     const found = registeredUsers.find(u => u.email === email);
     if (found) {
-      setUser({ id: found.id, email: found.email, nom: found.nom, prenom: found.prenom, role: found.role });
+      const { password: _, ...userData } = found;
+      setUser(userData);
       return true;
     }
     return false;
+  }, []);
+
+  const updateUser = useCallback((data: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...data };
+      const idx = registeredUsers.findIndex(u => u.id === prev.id);
+      if (idx !== -1) Object.assign(registeredUsers[idx], data);
+      return updated;
+    });
   }, []);
 
   const register = useCallback(async (data: { email: string; password: string; nom: string; prenom: string; specialite?: string }) => {
