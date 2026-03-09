@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { mockConsultations, mockPatients, mockRendezVous, mockUsers } from '@/lib/mock-data';
-import { Consultation, Prescription, Patient, RendezVous } from '@/lib/types';
+import { Consultation, Prescription, Patient } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,13 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Plus, Stethoscope, Pill, Trash2, CalendarDays, Clock, User,
-  Phone, Mail, MapPin, Droplets, AlertTriangle, FileText, ArrowLeft, ShieldCheck,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Plus, Stethoscope, Pill, Trash2, CalendarDays, User,
+  Phone, Mail, MapPin, Droplets, AlertTriangle, FileText, ArrowLeft,
+  Mic, Edit2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -34,7 +39,9 @@ const ConsultationsPage = () => {
   const [consultations, setConsultations] = useState<Consultation[]>(mockConsultations);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [consentement, setConsentement] = useState(false);
+  const [consentementAudio, setConsentementAudio] = useState(false);
+  const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
+  const [deletingConsultation, setDeletingConsultation] = useState<Consultation | null>(null);
 
   const [form, setForm] = useState({
     motif: '', symptomes: '', observations: '', diagnostic: '', notesMedecin: '',
@@ -58,40 +65,76 @@ const ConsultationsPage = () => {
 
   const startNewConsultation = (patient?: Patient) => {
     if (patient) setSelectedPatient(patient);
+    setEditingConsultation(null);
     setViewMode('new-consultation');
-    setConsentement(false);
+    setConsentementAudio(false);
     setForm({ motif: '', symptomes: '', observations: '', diagnostic: '', notesMedecin: '' });
     setPrescriptions([]);
   };
 
+  const startEditConsultation = (consultation: Consultation) => {
+    const patient = mockPatients.find(p => p.id === consultation.patientId);
+    if (patient) setSelectedPatient(patient);
+    setEditingConsultation(consultation);
+    setForm({
+      motif: consultation.motif,
+      symptomes: consultation.symptomes,
+      observations: consultation.observations,
+      diagnostic: consultation.diagnostic,
+      notesMedecin: '',
+    });
+    setPrescriptions(consultation.prescriptions.map(({ id, ...rest }) => rest));
+    setConsentementAudio(false);
+    setViewMode('new-consultation');
+  };
+
+  const handleDeleteConsultation = () => {
+    if (!deletingConsultation) return;
+    setConsultations(prev => prev.filter(c => c.id !== deletingConsultation.id));
+    toast({ title: 'Consultation supprimée', description: `Consultation ${deletingConsultation.id} supprimée avec succès.` });
+    setDeletingConsultation(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!consentement) {
-      toast({ title: 'Consentement requis', description: 'Le patient doit donner son consentement avant l\'enregistrement.', variant: 'destructive' });
-      return;
-    }
     if (!selectedPatient) return;
-    const consultation: Consultation = {
-      id: `C${String(Date.now()).slice(-4)}`,
-      patientId: selectedPatient.id,
-      medecinId: user?.id || '1',
-      date: new Date().toISOString().split('T')[0],
-      motif: form.motif,
-      symptomes: form.symptomes,
-      observations: form.observations,
-      diagnostic: form.diagnostic,
-      prescriptions: prescriptions.map((p, i) => ({ ...p, id: `RX${Date.now()}${i}` })),
-      statut: 'terminee',
-    };
-    setConsultations(prev => [consultation, ...prev]);
-    toast({ title: 'Consultation enregistrée', description: `Consultation pour ${selectedPatient.prenom} ${selectedPatient.nom} sauvegardée.` });
+
+    if (editingConsultation) {
+      const updated: Consultation = {
+        ...editingConsultation,
+        motif: form.motif,
+        symptomes: form.symptomes,
+        observations: form.observations,
+        diagnostic: form.diagnostic,
+        prescriptions: prescriptions.map((p, i) => ({ ...p, id: editingConsultation.prescriptions[i]?.id || `RX${Date.now()}${i}` })),
+      };
+      setConsultations(prev => prev.map(c => c.id === updated.id ? updated : c));
+      toast({ title: 'Consultation modifiée', description: `Consultation pour ${selectedPatient.prenom} ${selectedPatient.nom} mise à jour.` });
+    } else {
+      const consultation: Consultation = {
+        id: `C${String(Date.now()).slice(-4)}`,
+        patientId: selectedPatient.id,
+        medecinId: user?.id || '1',
+        date: new Date().toISOString().split('T')[0],
+        motif: form.motif,
+        symptomes: form.symptomes,
+        observations: form.observations,
+        diagnostic: form.diagnostic,
+        prescriptions: prescriptions.map((p, i) => ({ ...p, id: `RX${Date.now()}${i}` })),
+        statut: 'terminee',
+      };
+      setConsultations(prev => [consultation, ...prev]);
+      toast({ title: 'Consultation enregistrée', description: `Consultation pour ${selectedPatient.prenom} ${selectedPatient.nom} sauvegardée.` });
+    }
     setViewMode('list');
     setSelectedPatient(null);
+    setEditingConsultation(null);
   };
 
   const backToList = () => {
     setViewMode('list');
     setSelectedPatient(null);
+    setEditingConsultation(null);
   };
 
   const patientConsultations = selectedPatient
@@ -151,10 +194,20 @@ const ConsultationsPage = () => {
         ) : (
           <div className="space-y-3">
             {patientConsultations.map(c => (
-              <div key={c.id} className="p-3 rounded-lg bg-muted/50 text-sm space-y-1">
-                <div className="flex justify-between">
+              <div key={c.id} className="p-3 rounded-lg bg-muted/50 text-sm space-y-1 group relative">
+                <div className="flex justify-between items-start">
                   <span className="font-medium">{c.motif}</span>
-                  <span className="text-muted-foreground text-xs">{c.date}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground text-xs">{c.date}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => { e.stopPropagation(); startEditConsultation(c); }}>
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
+                      onClick={(e) => { e.stopPropagation(); setDeletingConsultation(c); }}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-muted-foreground text-xs">Diagnostic : {c.diagnostic}</p>
                 {c.prescriptions.length > 0 && (
@@ -172,7 +225,7 @@ const ConsultationsPage = () => {
     </div>
   );
 
-  // ── LIST VIEW: Rendez-vous ──
+  // ── LIST VIEW ──
   if (viewMode === 'list') {
     return (
       <div className="space-y-6 animate-fade-in">
@@ -219,6 +272,24 @@ const ConsultationsPage = () => {
             );
           })}
         </div>
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={!!deletingConsultation} onOpenChange={(open) => !open && setDeletingConsultation(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer cette consultation ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. La consultation du {deletingConsultation?.date} ({deletingConsultation?.motif}) sera définitivement supprimée.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteConsultation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
@@ -241,16 +312,36 @@ const ConsultationsPage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={!!deletingConsultation} onOpenChange={(open) => !open && setDeletingConsultation(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer cette consultation ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. La consultation du {deletingConsultation?.date} ({deletingConsultation?.motif}) sera définitivement supprimée.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteConsultation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
 
-  // ── NEW CONSULTATION: Split View ──
+  // ── NEW / EDIT CONSULTATION: Split View ──
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={backToList}><ArrowLeft className="h-5 w-5" /></Button>
-        <h1 className="text-2xl font-heading font-bold">Nouvelle consultation</h1>
+        <h1 className="text-2xl font-heading font-bold">
+          {editingConsultation ? 'Modifier la consultation' : 'Nouvelle consultation'}
+        </h1>
       </div>
 
       {!selectedPatient ? (
@@ -292,7 +383,8 @@ const ConsultationsPage = () => {
               <ScrollArea className="h-[calc(100vh-200px)]">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <h2 className="font-heading font-semibold flex items-center gap-2">
-                    <Stethoscope className="h-5 w-5 text-primary" /> Formulaire de consultation
+                    <Stethoscope className="h-5 w-5 text-primary" />
+                    {editingConsultation ? 'Modifier la consultation' : 'Formulaire de consultation'}
                   </h2>
 
                   <div className="space-y-1.5">
@@ -353,23 +445,27 @@ const ConsultationsPage = () => {
 
                   <Separator />
 
-                  {/* Consentement */}
+                  {/* Consentement audio uniquement */}
                   <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
-                    <Checkbox id="consentement" checked={consentement} onCheckedChange={(v) => setConsentement(v === true)} className="mt-0.5" />
+                    <Checkbox id="consentementAudio" checked={consentementAudio} onCheckedChange={(v) => setConsentementAudio(v === true)} className="mt-0.5" />
                     <div>
-                      <Label htmlFor="consentement" className="font-semibold flex items-center gap-2 cursor-pointer">
-                        <ShieldCheck className="h-4 w-4 text-primary" /> Consentement du patient
+                      <Label htmlFor="consentementAudio" className="font-semibold flex items-center gap-2 cursor-pointer">
+                        <Mic className="h-4 w-4 text-primary" /> Enregistrement audio en temps réel
                       </Label>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Le patient a été informé et consent au traitement de ses données médicales et à l'enregistrement de cette consultation.
+                        Le patient consent à l'enregistrement audio de cette consultation. Ce consentement est requis uniquement pour activer l'enregistrement vocal.
                       </p>
                     </div>
                   </div>
 
                   <div className="flex justify-end gap-3 pt-2">
                     <Button type="button" variant="outline" onClick={backToList}>Annuler</Button>
-                    <Button type="submit" className="medical-gradient border-0 text-primary-foreground" disabled={!consentement}>
-                      <ShieldCheck className="mr-2 h-4 w-4" /> Enregistrer la consultation
+                    <Button type="submit" className="medical-gradient border-0 text-primary-foreground">
+                      {editingConsultation ? (
+                        <><Edit2 className="mr-2 h-4 w-4" /> Mettre à jour</>
+                      ) : (
+                        <><Stethoscope className="mr-2 h-4 w-4" /> Enregistrer la consultation</>
+                      )}
                     </Button>
                   </div>
                 </form>
@@ -378,6 +474,24 @@ const ConsultationsPage = () => {
           </Card>
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deletingConsultation} onOpenChange={(open) => !open && setDeletingConsultation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette consultation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La consultation du {deletingConsultation?.date} ({deletingConsultation?.motif}) sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConsultation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
