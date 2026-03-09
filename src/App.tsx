@@ -13,6 +13,7 @@ import ConsultationsPage from "./pages/ConsultationsPage";
 import RendezVousPage from "./pages/RendezVousPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import MedecinsPage from "./pages/MedecinsPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
