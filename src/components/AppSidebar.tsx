@@ -16,6 +16,7 @@ const medecinItems = [
   { title: 'Consultations', url: '/consultations', icon: Stethoscope },
   { title: 'Rendez-vous', url: '/rendez-vous', icon: CalendarDays },
   { title: 'Documents', url: '/documents', icon: FileText },
+  { title: 'Mon profil', url: '/profil', icon: UserCircle },
 ];
 
 const adminItems = [
