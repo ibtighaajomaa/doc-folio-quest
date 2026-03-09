@@ -5,9 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, User, Phone, Mail, Pencil } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, Pencil, Trash2 } from 'lucide-react';
 import PatientFormDialog from '@/components/PatientFormDialog';
 import PatientDetailDialog from '@/components/PatientDetailDialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 const PatientsPage = () => {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
@@ -15,6 +20,7 @@ const PatientsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [deletingPatient, setDeletingPatient] = useState<Patient | null>(null);
 
   const filtered = patients.filter(p =>
     `${p.nom} ${p.prenom} ${p.id}`.toLowerCase().includes(search.toLowerCase())
@@ -34,6 +40,19 @@ const PatientsPage = () => {
     e.stopPropagation();
     setEditingPatient(patient);
     setShowForm(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, patient: Patient) => {
+    e.stopPropagation();
+    setDeletingPatient(patient);
+  };
+
+  const confirmDelete = () => {
+    if (deletingPatient) {
+      setPatients(prev => prev.filter(p => p.id !== deletingPatient.id));
+      toast.success(`Patient ${deletingPatient.prenom} ${deletingPatient.nom} supprimé`);
+      setDeletingPatient(null);
+    }
   };
 
   return (
@@ -65,9 +84,14 @@ const PatientsPage = () => {
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm truncate">{patient.prenom} {patient.nom}</p>
                     <Badge variant="outline" className="text-xs shrink-0">{patient.id}</Badge>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleEdit(e, patient)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="ml-auto flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => handleEdit(e, patient)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => handleDeleteClick(e, patient)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {patient.sexe === 'M' ? 'Homme' : 'Femme'} · Né(e) le {patient.dateNaissance}
@@ -88,6 +112,21 @@ const PatientsPage = () => {
 
       <PatientFormDialog open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setEditingPatient(null); }} onSubmit={handleSavePatient} editingPatient={editingPatient} />
       <PatientDetailDialog patient={selectedPatient} onClose={() => setSelectedPatient(null)} />
+
+      <AlertDialog open={!!deletingPatient} onOpenChange={(o) => { if (!o) setDeletingPatient(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le patient</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer <strong>{deletingPatient?.prenom} {deletingPatient?.nom}</strong> ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
