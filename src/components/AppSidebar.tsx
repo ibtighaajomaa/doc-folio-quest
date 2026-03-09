@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
-  LayoutDashboard, Users, Stethoscope, CalendarDays, FileText, LogOut, Heart, UserCog,
+  LayoutDashboard, Users, Stethoscope, CalendarDays, FileText, LogOut, Heart, UserCog, UserCircle,
 } from 'lucide-react';
 
 const medecinItems = [
