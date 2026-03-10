@@ -43,6 +43,7 @@ const ConsultationsPage = () => {
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
   const [deletingConsultation, setDeletingConsultation] = useState<Consultation | null>(null);
 
+  const [isRecording, setIsRecording] = useState(false);
   const [form, setForm] = useState({
     motif: '', symptomes: '', observations: '', diagnostic: '', notesMedecin: '',
   });
