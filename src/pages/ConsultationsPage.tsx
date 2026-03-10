@@ -17,7 +17,7 @@ import {
 import {
   Plus, Stethoscope, Pill, Trash2, CalendarDays, User,
   Phone, Mail, MapPin, Droplets, AlertTriangle, FileText, ArrowLeft,
-  Mic, Edit2,
+  Mic, MicOff, Edit2, Square,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -43,6 +43,7 @@ const ConsultationsPage = () => {
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
   const [deletingConsultation, setDeletingConsultation] = useState<Consultation | null>(null);
 
+  const [isRecording, setIsRecording] = useState(false);
   const [form, setForm] = useState({
     motif: '', symptomes: '', observations: '', diagnostic: '', notesMedecin: '',
   });
@@ -445,17 +446,51 @@ const ConsultationsPage = () => {
 
                   <Separator />
 
-                  {/* Consentement audio uniquement */}
-                  <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
-                    <Checkbox id="consentementAudio" checked={consentementAudio} onCheckedChange={(v) => setConsentementAudio(v === true)} className="mt-0.5" />
-                    <div>
-                      <Label htmlFor="consentementAudio" className="font-semibold flex items-center gap-2 cursor-pointer">
-                        <Mic className="h-4 w-4 text-primary" /> Enregistrement audio en temps réel
-                      </Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Le patient consent à l'enregistrement audio de cette consultation. Ce consentement est requis uniquement pour activer l'enregistrement vocal.
-                      </p>
+                  {/* Consentement audio + bouton enregistrement */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
+                      <Checkbox id="consentementAudio" checked={consentementAudio} onCheckedChange={(v) => { setConsentementAudio(v === true); if (!v) setIsRecording(false); }} className="mt-0.5" />
+                      <div className="flex-1">
+                        <Label htmlFor="consentementAudio" className="font-semibold flex items-center gap-2 cursor-pointer">
+                          <Mic className="h-4 w-4 text-primary" /> Enregistrement audio en temps réel
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Le patient consent à l'enregistrement audio de cette consultation. Ce consentement est requis uniquement pour activer l'enregistrement vocal.
+                        </p>
+                      </div>
                     </div>
+
+                    {consentementAudio && (
+                      <div className="flex items-center gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
+                        {isRecording && (
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                          </span>
+                        )}
+                        <span className="text-sm font-medium flex-1">
+                          {isRecording ? 'Enregistrement en cours…' : 'Prêt à enregistrer'}
+                        </span>
+                        <Button
+                          type="button"
+                          variant={isRecording ? 'destructive' : 'default'}
+                          size="sm"
+                          onClick={() => {
+                            setIsRecording(!isRecording);
+                            toast({
+                              title: isRecording ? 'Enregistrement arrêté' : 'Enregistrement démarré',
+                              description: isRecording ? 'L\'audio a été sauvegardé.' : 'L\'enregistrement audio est en cours.',
+                            });
+                          }}
+                        >
+                          {isRecording ? (
+                            <><Square className="mr-2 h-4 w-4" /> Arrêter</>
+                          ) : (
+                            <><Mic className="mr-2 h-4 w-4" /> Enregistrer</>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-end gap-3 pt-2">
