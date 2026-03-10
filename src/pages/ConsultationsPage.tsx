@@ -17,7 +17,7 @@ import {
 import {
   Plus, Stethoscope, Pill, Trash2, CalendarDays, User,
   Phone, Mail, MapPin, Droplets, AlertTriangle, FileText, ArrowLeft,
-  Mic, Edit2,
+  Mic, MicOff, Edit2, Square,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
